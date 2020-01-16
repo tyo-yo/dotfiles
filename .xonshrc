@@ -1,0 +1,48 @@
+xontrib load z
+xontrib load docker_tabcomplete
+xontrib load powerline
+xontrib load readable-traceback
+
+$XONSH_COLOR_STYLE='monokai'
+user_paths = [
+	$HOME + '/.pyenv/shims',
+	$HOME + '/local/bin',
+	'/usr/local/bin',
+]
+$PATH.extend(user_paths)
+$XONSH_SHOW_TRACEBACK = True
+
+def _pipenv(args, stdin=None):
+    """
+		Based on: https://github.com/xonsh/xonsh/issues/2397, https://xsteadfastx.org/tag/pipenv.html
+    """
+    import base64
+    import hashlib
+    import os
+    import re
+
+    if args and args[0] == 'shell':
+
+        if os.path.isdir('.venv'):
+            venv_path = '.venv'
+
+        else:
+            name = $PWD.split(os.sep)[-1]
+            sanitized = re.sub(r'[ $`!*@"\\\r\n\t]', '_', name)[0:42]
+            hash = hashlib.sha256(os.path.join($PWD, 'Pipfile').encode()).digest()[:6]
+            encoded_hash = base64.urlsafe_b64encode(hash).decode()
+            venv_name = sanitized + '-' + encoded_hash
+            venv_path = os.path.join(os.path.expanduser('~'),
+                                     '.local/share/virtualenvs',
+                                     venv_name)
+
+        if os.path.isfile(os.path.join(venv_path, 'bin/activate.xsh')):
+            source @(venv_path + '/bin/activate.xsh')
+            print("using own xonsh alias function instead of pipenv shell. 'deactivate' to exit virtualenv")
+        else:
+            print('No environment found.')
+
+    else:
+        /usr/local/bin/pipenv @(args)
+
+aliases['pipenv'] = _pipenv
