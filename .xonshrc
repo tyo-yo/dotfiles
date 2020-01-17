@@ -2,16 +2,38 @@ xontrib load z
 xontrib load docker_tabcomplete
 xontrib load powerline
 xontrib load readable-traceback
+xontrib load fzf-widgets
 
-$XONSH_COLOR_STYLE='monokai'
+# pythonライブラリのimport
+from pathlib import Path
+
+# パスの追加
 user_paths = [
 	$HOME + '/.pyenv/shims',
 	$HOME + '/local/bin',
 	'/usr/local/bin',
 ]
 $PATH.extend(user_paths)
-$XONSH_SHOW_TRACEBACK = True
 
+# エラーメッセージ全表示
+$XONSH_SHOW_TRACEBACK = True
+# ディレクトリ名を指すだけでcd
+$AUTO_CD = True
+# キー入力時即時補完
+$UPDATE_COMPLETIONS_ON_KEYPRESS = True
+# 補完をEnterで直接実行しない
+$COMPLETIONS_CONFIRM = True
+# デフォルトのエディタを変更
+$EDITOR = 'micro'
+
+# 色
+$PROMPT = '{BACKGROUND_#555}{WHITE} {short_cwd} {NO_COLOR}{#555}{NO_COLOR}'
+$PL_COLORS['cwd_git'] = ('CYAN', 'WHITE')
+$PL_COLORS['cwd'] = ('WHITE', '#333')
+$PL_COLORS['virtualenv'] = ('#333', 'GREEN')
+$PL_COLORS['who'] = ('#333', 'YELLOW')
+
+# Pipenvが上手く使えない問題を解消
 def _pipenv(args, stdin=None):
     """
 		Based on: https://github.com/xonsh/xonsh/issues/2397, https://xsteadfastx.org/tag/pipenv.html
@@ -46,3 +68,76 @@ def _pipenv(args, stdin=None):
         /usr/local/bin/pipenv @(args)
 
 aliases['pipenv'] = _pipenv
+
+
+# 履歴をpecoに流す
+# https://qiita.com/riktor/items/4a90b4e125cd091a9d07
+# pecoのinstall : https://qiita.com/ngyuki/items/94a7e638655d9910971b
+import json
+from collections import OrderedDict
+from operator import itemgetter
+def get_history(session_history=None, return_list=False):
+    histories_str = $(history show all)
+    histories = histories_str.split('\n')
+    histories.reverse()
+    return '\n'.join(histories)
+
+
+# sshをpecoに流す
+def get_ssh():
+    items = re.sub(r'(?i)host ', '', $(cat ~/.ssh/config /etc/ssh/ssh_config | grep -i '^host'))
+    return items
+
+
+# キーバインド
+from prompt_toolkit.keys import Keys
+from prompt_toolkit.filters import (Condition, IsMultiline, HasSelection, EmacsInsertMode, ViInsertMode)
+@events.on_ptk_create
+def custom_keybindings(bindings, **kw):
+
+    # ptk 2.xでは @bindings.add('c-v') とする
+    # コマンド入力中にctrl+vでvim編集
+    @bindings.add('c-v')
+    def edit_in_editor(event):
+        event.current_buffer.tempfile_suffix = '.py'
+        event.current_buffer.open_in_editor(event.cli)
+
+    # ctrl+rで履歴をpecoに流して検索
+    @bindings.add('c-r')
+    def select_history(event):
+        sess_history = $(history).split('\n')
+        hist = get_history(sess_history)
+        selected = $(echo @(hist) | peco)
+        event.current_buffer.insert_text(selected.strip())
+
+    # ctrl+sでssh先をpeco
+    @bindings.add('c-s')
+    def select_ssh(event):
+        hosts = '\n'.join([x for x in get_ssh().split('\n') if x!='*' and 'HostKey' not in x])
+        selected = $(echo @(hosts) | peco)
+        if selected:
+            event.current_buffer.insert_text('ssh ' + selected.strip())
+
+
+# ファイルブラウジング
+def get_files():
+    import tempfile
+    with tempfile.NamedTemporaryFile() as f:
+        find * -maxdepth 2 | fzf --preview 'head -100 {}' --layout reverse > @(f.name)
+        txt = f.read()
+    # return txt.decode('utf-8').strip()
+aliases['f'] = get_files
+
+
+# ブランチを選択し移動
+def get_branch():
+    branch = $(git branch -vv | peco)
+    branch = branch[2:].split(' ')[0]
+    git checkout @(branch)
+aliases['br'] = get_branch
+
+
+# gitのログを確認
+def get_git_log():
+    git log --graph --color=always --format="%C(auto)%h%d %s %C(black)%C(bold)%cr"  | fzf --ansi --no-sort --reverse > /dev/null
+aliases['gl'] = get_git_log
