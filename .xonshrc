@@ -2,7 +2,6 @@ xontrib load z
 xontrib load docker_tabcomplete
 xontrib load powerline
 xontrib load readable-traceback
-xontrib load fzf-widgets
 
 # pythonライブラリのimport
 from pathlib import Path
