@@ -1,6 +1,6 @@
 xontrib load z
 xontrib load docker_tabcomplete
-xontrib load powerline2
+# xontrib load powerline2
 xontrib load readable-traceback
 
 # pythonライブラリのimport
