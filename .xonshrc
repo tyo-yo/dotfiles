@@ -26,11 +26,11 @@ $COMPLETIONS_CONFIRM = True
 $EDITOR = 'micro'
 
 # 色
-$PROMPT = '{BACKGROUND_#555}{WHITE} {short_cwd} {NO_COLOR}{#555}{NO_COLOR}'
-$PL_COLORS['cwd_git'] = ('CYAN', 'WHITE')
-$PL_COLORS['cwd'] = ('WHITE', '#333')
-$PL_COLORS['virtualenv'] = ('#333', 'GREEN')
-$PL_COLORS['who'] = ('#333', 'YELLOW')
+# $PROMPT = '{BACKGROUND_#555}{WHITE} {short_cwd} {NO_COLOR}{#555}{NO_COLOR}'
+# $PL_COLORS['cwd_git'] = ('CYAN', 'WHITE')
+# $PL_COLORS['cwd'] = ('WHITE', '#333')
+# $PL_COLORS['virtualenv'] = ('#333', 'GREEN')
+# $PL_COLORS['who'] = ('#333', 'YELLOW')
 
 # Pipenvが上手く使えない問題を解消
 def _pipenv(args, stdin=None):
