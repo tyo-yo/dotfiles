@@ -43,7 +43,6 @@ def _pipenv(args, stdin=None):
     import re
 
     if args and args[0] == 'shell':
-
         if os.path.isdir('.venv'):
             venv_path = '.venv'
 
@@ -59,7 +58,7 @@ def _pipenv(args, stdin=None):
 
         if os.path.isfile(os.path.join(venv_path, 'bin/activate.xsh')):
             source @(venv_path + '/bin/activate.xsh')
-            print("using own xonsh alias function instead of pipenv shell. 'deactivate' to exit virtualenv")
+            print("using own xonsh alias function instead of pipenv shell. 'deactivate' or 'd' to exit virtualenv")
         else:
             print('No environment found.')
 
@@ -67,6 +66,8 @@ def _pipenv(args, stdin=None):
         /usr/local/bin/pipenv @(args)
 
 aliases['pipenv'] = _pipenv
+aliases['a'] = 'pipenv shell'
+aliases['d'] = 'deactivate'
 
 
 # 履歴をpecoに流す
